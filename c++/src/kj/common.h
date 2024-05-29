@@ -102,6 +102,7 @@ KJ_BEGIN_HEADER
 #include <cstring>
 #include <initializer_list>
 #include <string.h>
+#include <compare>
 
 #if _WIN32
 // Windows likes to define macros for min() and max(). We just can't deal with this.
@@ -1926,6 +1927,51 @@ public:
       if (ptr[i] != other[i]) return false;
     }
     return true;
+  }
+
+  inline auto operator<=>(decltype(nullptr)) const { 
+    using ReturnType = decltype(ptr[0] <=> ptr[0]);
+    return size_ == 0 ? (ReturnType) std::strong_ordering::equal
+                      : (ReturnType) std::strong_ordering::greater;
+  }
+
+  inline auto operator<=>(const ArrayPtr& other) const {
+    //Lexographic 3-way comparitor function 
+    //NOTE: Should not be used to erase equality, as does not short circuit on size
+    using ReturnType = decltype(ptr[0] <=> other[0]);
+    size_t comparisonSize = kj::min(size_, other.size_);
+    if constexpr (isIntegral<RemoveConst<T>>()) {
+      int ret = memcmp(ptr, other.ptr, comparisonSize * sizeof(T));
+      if(ret) {
+        return ret < 0 ? (ReturnType) std::strong_ordering::less 
+                        : (ReturnType) std::strong_ordering::greater;
+      }
+    } else {
+      for(size_t i = 0; i < comparisonSize; i++) {
+        auto ret = ptr[i] <=> other[i];
+        if(ret != (ReturnType) std::strong_ordering::equal) {
+          return ret;
+        }
+      }
+    }
+    return size_ == other.size_ ? (ReturnType) std::strong_ordering::equal 
+          : size_ <  other.size_ ? (ReturnType) std::strong_ordering::less 
+          : (ReturnType) std::strong_ordering::greater;
+  }
+
+  template <typename U>
+  inline auto operator<=>(const ArrayPtr<U>& other) const {
+    //Lexographic 3-way comparitor function 
+    //NOTE: Should not be used to erase equality, as does not short circuit on size
+    using ReturnType = decltype(ptr[0] <=> other[0]);
+    size_t comparisonSize = kj::min(size_, other.size());
+    for (size_t i = 0; i < comparisonSize; i++) {
+      auto ret = ptr[i] <=> other[i];
+      if (ret != (ReturnType) std::strong_ordering::equal) return ret;
+    }
+    return size_ == other.size() ? (ReturnType) std::strong_ordering::equal :
+              size_ <  other.size() ? (ReturnType) std::strong_ordering::less : 
+                                      (ReturnType) std::strong_ordering::greater;
   }
 
   template <typename... Attachments>
