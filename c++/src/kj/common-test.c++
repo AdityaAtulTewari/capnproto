@@ -818,186 +818,127 @@ KJ_TEST("ArrayPtr operator ==") {
   KJ_EXPECT(ArrayPtr<double>(d, 1) != ArrayPtr<double>(d, 1));
 }
 
-KJ_TEST("ArrayPtr operator <=>") {
-  KJ_EXPECT((ArrayPtr<const int>({}) <=> nullptr) == std::strong_ordering::equal);
-  KJ_EXPECT(ArrayPtr<const int>({}) == nullptr);
-  KJ_EXPECT(!(ArrayPtr<const int>({}) != nullptr));
-  KJ_EXPECT(ArrayPtr<const int>({}) <= nullptr);
-  KJ_EXPECT(ArrayPtr<const int>({}) >= nullptr);
-  KJ_EXPECT(!(ArrayPtr<const int>({}) < nullptr));
-  KJ_EXPECT(!(ArrayPtr<const int>({}) > nullptr));
-  KJ_EXPECT((nullptr <=> ArrayPtr<const int>({})) == std::strong_ordering::equal);
-  KJ_EXPECT(nullptr == ArrayPtr<const int>({}));
-  KJ_EXPECT(!(nullptr != ArrayPtr<const int>({})));
-  KJ_EXPECT(nullptr <= ArrayPtr<const int>({}));
-  KJ_EXPECT(nullptr >= ArrayPtr<const int>({}));
-  KJ_EXPECT(!(nullptr < ArrayPtr<const int>({})));
-  KJ_EXPECT(!(nullptr > ArrayPtr<const int>({})));
-  KJ_EXPECT((ArrayPtr<const int>({123}) <=> nullptr) == std::strong_ordering::greater);
-  KJ_EXPECT(!(ArrayPtr<const int>({123}) == nullptr));
-  KJ_EXPECT(ArrayPtr<const int>({123}) != nullptr);
-  KJ_EXPECT(!(ArrayPtr<const int>({123}) <= nullptr));
-  KJ_EXPECT(ArrayPtr<const int>({123}) >= nullptr);
-  KJ_EXPECT(!(ArrayPtr<const int>({123}) < nullptr));
-  KJ_EXPECT(ArrayPtr<const int>({123}) > nullptr);
-  KJ_EXPECT((nullptr <=> ArrayPtr<const int>({123})) == std::strong_ordering::less);
-  KJ_EXPECT(!(nullptr == ArrayPtr<const int>({123})));
-  KJ_EXPECT(nullptr != ArrayPtr<const int>({123}));
-  KJ_EXPECT(nullptr <= ArrayPtr<const int>({123}));
-  KJ_EXPECT(!(nullptr >= ArrayPtr<const int>({123})));
-  KJ_EXPECT(nullptr < ArrayPtr<const int>({123}));
-  KJ_EXPECT(!(nullptr > ArrayPtr<const int>({123})));
-  //nullptr
+#define COMPARISON(a, b, op, ans) \
+  ((a) op (b)) == (ans)
 
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) <=> ArrayPtr<const int>({123, 456})) == std::strong_ordering::equal);
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) == ArrayPtr<const int>({123, 456})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) != ArrayPtr<const int>({123, 456})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) <= ArrayPtr<const int>({123, 456})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) >= ArrayPtr<const int>({123, 456})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) < ArrayPtr<const int>({123, 456})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) > ArrayPtr<const int>({123, 456})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) <=> ArrayPtr<const int>({123, 457})) == std::strong_ordering::less);
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) == ArrayPtr<const int>({123, 457})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) != ArrayPtr<const int>({123, 457})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) <= ArrayPtr<const int>({123, 457})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) >= ArrayPtr<const int>({123, 457})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) < ArrayPtr<const int>({123, 457})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) > ArrayPtr<const int>({123, 457})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) <=> ArrayPtr<const int>({123, 321})) == std::strong_ordering::greater);
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) == ArrayPtr<const int>({123, 321})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) != ArrayPtr<const int>({123, 321})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) <= ArrayPtr<const int>({123, 321})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) >= ArrayPtr<const int>({123, 321})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) < ArrayPtr<const int>({123, 321})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) > ArrayPtr<const int>({123, 321})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) <=> ArrayPtr<const int>({123})) == std::strong_ordering::greater);
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) == ArrayPtr<const int>({123})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) != ArrayPtr<const int>({123})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) <= ArrayPtr<const int>({123})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) >= ArrayPtr<const int>({123})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) < ArrayPtr<const int>({123})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) > ArrayPtr<const int>({123})));
-  //same type
+#define ALL_COMPARISONS(a,b, ans0, ans1, ans2, ans3, ans4, ans5, ans6) \
+  KJ_EXPECT(COMPARISON(a, b, <=>, (ans0)));   \
+  KJ_EXPECT(COMPARISON(a, b, ==, (ans1)));    \
+  KJ_EXPECT(COMPARISON(a, b, !=, (ans2)));    \
+  KJ_EXPECT(COMPARISON(a, b, <=, (ans3)));    \
+  KJ_EXPECT(COMPARISON(a, b, >=, (ans4)));    \
+  KJ_EXPECT(COMPARISON(a, b, <, (ans5)));     \
+  KJ_EXPECT(COMPARISON(a, b, >, (ans6)))    
 
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) <=> ArrayPtr<const short>({123, 456})) == std::strong_ordering::equal);
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) == ArrayPtr<const short>({123, 456})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) != ArrayPtr<const short>({123, 456})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) <= ArrayPtr<const short>({123, 456})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) >= ArrayPtr<const short>({123, 456})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) < ArrayPtr<const short>({123, 456})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) > ArrayPtr<const short>({123, 456})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) <=> ArrayPtr<const short>({123, 457})) == std::strong_ordering::less);
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) == ArrayPtr<const short>({123, 457})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) != ArrayPtr<const short>({123, 457})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) <= ArrayPtr<const short>({123, 457})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) >= ArrayPtr<const short>({123, 457})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) < ArrayPtr<const short>({123, 457})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) > ArrayPtr<const short>({123, 457})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) <=> ArrayPtr<const short>({123, 321})) == std::strong_ordering::greater);
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) == ArrayPtr<const short>({123, 321})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) != ArrayPtr<const short>({123, 321})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) <= ArrayPtr<const short>({123, 321})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) >= ArrayPtr<const short>({123, 321})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) < ArrayPtr<const short>({123, 321})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) > ArrayPtr<const short>({123, 321})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) <=> ArrayPtr<const short>({123})) == std::strong_ordering::greater);
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) == ArrayPtr<const short>({123})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) != ArrayPtr<const short>({123})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) <= ArrayPtr<const short>({123})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) >= ArrayPtr<const short>({123})));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) < ArrayPtr<const short>({123})));
-  KJ_EXPECT((ArrayPtr<const int>({123, 456}) > ArrayPtr<const short>({123})));
-  KJ_EXPECT((ArrayPtr<const int>({124}) <=> ArrayPtr<const short>({123})) == std::strong_ordering::greater);
-  KJ_EXPECT(!(ArrayPtr<const int>({124}) == ArrayPtr<const short>({123})));
-  KJ_EXPECT((ArrayPtr<const int>({124}) != ArrayPtr<const short>({123})));
-  KJ_EXPECT(!(ArrayPtr<const int>({124}) <= ArrayPtr<const short>({123})));
-  KJ_EXPECT((ArrayPtr<const int>({124}) >= ArrayPtr<const short>({123})));
-  KJ_EXPECT(!(ArrayPtr<const int>({124}) < ArrayPtr<const short>({123})));
-  KJ_EXPECT((ArrayPtr<const int>({124}) > ArrayPtr<const short>({123})));
-  //different type
+#define STRONG_COMPARISONS(a, b, ans3way) \
+  ALL_COMPARISONS(a, b, ans3way, ans3way == std::strong_ordering::equal, \
+    ans3way != std::strong_ordering::equal, \
+    ans3way != std::strong_ordering::greater, \
+    ans3way != std::strong_ordering::less, \
+    ans3way == std::strong_ordering::less, \
+    ans3way == std::strong_ordering::greater)
 
-  KJ_EXPECT((ArrayPtr<const StringPtr>({"foo", "bar"}) <=>
-             ArrayPtr<const char* const>({"foo", "bar"})) == std::strong_ordering::equal);
-  KJ_EXPECT((ArrayPtr<const StringPtr>({"foo", "bar"}) ==
-             ArrayPtr<const char* const>({"foo", "bar"})));
-  KJ_EXPECT(!(ArrayPtr<const StringPtr>({"foo", "bar"}) !=
-             ArrayPtr<const char* const>({"foo", "bar"})));
-  KJ_EXPECT((ArrayPtr<const StringPtr>({"foo", "bar"}) <=
-             ArrayPtr<const char* const>({"foo", "bar"})));
-  KJ_EXPECT((ArrayPtr<const StringPtr>({"foo", "bar"}) >=
-             ArrayPtr<const char* const>({"foo", "bar"})));
-  KJ_EXPECT(!(ArrayPtr<const StringPtr>({"foo", "bar"}) < 
-             ArrayPtr<const char* const>({"foo", "bar"})));
-  KJ_EXPECT(!(ArrayPtr<const StringPtr>({"foo", "bar"}) > 
-             ArrayPtr<const char* const>({"foo", "bar"})));
-  KJ_EXPECT((ArrayPtr<const StringPtr>({"foo", "bar"}) <=>
-             ArrayPtr<const char* const>({"foo", "baz"})) == std::strong_ordering::less);
-  KJ_EXPECT(!(ArrayPtr<const StringPtr>({"foo", "bar"}) ==
-             ArrayPtr<const char* const>({"foo", "baz"})));
-  KJ_EXPECT((ArrayPtr<const StringPtr>({"foo", "bar"}) !=
-             ArrayPtr<const char* const>({"foo", "baz"})));
-  KJ_EXPECT((ArrayPtr<const StringPtr>({"foo", "bar"}) <=
-             ArrayPtr<const char* const>({"foo", "baz"})));
-  KJ_EXPECT(!(ArrayPtr<const StringPtr>({"foo", "bar"}) >=
-             ArrayPtr<const char* const>({"foo", "baz"})));
-  KJ_EXPECT((ArrayPtr<const StringPtr>({"foo", "bar"}) <
-             ArrayPtr<const char* const>({"foo", "baz"})));
-  KJ_EXPECT(!(ArrayPtr<const StringPtr>({"foo", "bar"}) >
-             ArrayPtr<const char* const>({"foo", "baz"})));
-  KJ_EXPECT((ArrayPtr<const StringPtr>({"foo", "bar"}) <=> 
-             ArrayPtr<const char* const>({"foo"})) == std::strong_ordering::greater);
-  KJ_EXPECT(!(ArrayPtr<const StringPtr>({"foo", "bar"}) == 
-             ArrayPtr<const char* const>({"foo"})));
-  KJ_EXPECT((ArrayPtr<const StringPtr>({"foo", "bar"}) != 
-             ArrayPtr<const char* const>({"foo"})));
-  KJ_EXPECT(!(ArrayPtr<const StringPtr>({"foo", "bar"}) <= 
-             ArrayPtr<const char* const>({"foo"})));
-  KJ_EXPECT((ArrayPtr<const StringPtr>({"foo", "bar"}) >= 
-             ArrayPtr<const char* const>({"foo"})));
-  KJ_EXPECT(!(ArrayPtr<const StringPtr>({"foo", "bar"}) < 
-             ArrayPtr<const char* const>({"foo"})));
-  KJ_EXPECT((ArrayPtr<const StringPtr>({"foo", "bar"}) > 
-             ArrayPtr<const char* const>({"foo"})));
-  //string types
+#define WEAK_COMPARISONS(a, b, ans3way) \
+  ALL_COMPARISONS(a, b, ans3way, ans3way == std::weak_ordering::equivalent, \
+    ans3way != std::partial_ordering::equivalent, \
+    ans3way != std::weak_ordering::greater && ans3way != std::partial_ordering::unordered, \
+    ans3way != std::weak_ordering::less && ans3way != std::partial_ordering::unordered, \
+    ans3way == std::weak_ordering::less, \
+    ans3way == std::weak_ordering::greater)
 
-  KJ_EXPECT((ArrayPtr<const double>({0.0}) <=> ArrayPtr<const double>({0.0})) == std::partial_ordering::equivalent);
-  KJ_EXPECT((ArrayPtr<const double>({0.0}) == ArrayPtr<const double>({0.0})));
-  KJ_EXPECT(!(ArrayPtr<const double>({0.0}) != ArrayPtr<const double>({0.0})));
-  KJ_EXPECT((ArrayPtr<const double>({0.0}) <= ArrayPtr<const double>({0.0})));
-  KJ_EXPECT((ArrayPtr<const double>({0.0}) >= ArrayPtr<const double>({0.0})));
-  KJ_EXPECT(!(ArrayPtr<const double>({0.0}) > ArrayPtr<const double>({0.0})));
-  KJ_EXPECT(!(ArrayPtr<const double>({0.0}) < ArrayPtr<const double>({0.0})));
-  KJ_EXPECT((ArrayPtr<const double>({1.0}) <=> ArrayPtr<const double>({0.0})) == std::partial_ordering::greater);
-  KJ_EXPECT(!(ArrayPtr<const double>({1.0}) == ArrayPtr<const double>({0.0})));
-  KJ_EXPECT((ArrayPtr<const double>({1.0}) != ArrayPtr<const double>({0.0})));
-  KJ_EXPECT(!(ArrayPtr<const double>({1.0}) <= ArrayPtr<const double>({0.0})));
-  KJ_EXPECT((ArrayPtr<const double>({1.0}) >= ArrayPtr<const double>({0.0})));
-  KJ_EXPECT(!(ArrayPtr<const double>({1.0}) < ArrayPtr<const double>({0.0})));
-  KJ_EXPECT((ArrayPtr<const double>({1.0}) > ArrayPtr<const double>({0.0})));
-  KJ_EXPECT((ArrayPtr<const double>({0.0}) <=> ArrayPtr<const double>({1.0})) == std::partial_ordering::less);
-  KJ_EXPECT(!(ArrayPtr<const double>({0.0}) == ArrayPtr<const double>({1.0})));
-  KJ_EXPECT((ArrayPtr<const double>({0.0}) != ArrayPtr<const double>({1.0})));
-  KJ_EXPECT((ArrayPtr<const double>({0.0}) <= ArrayPtr<const double>({1.0})));
-  KJ_EXPECT(!(ArrayPtr<const double>({0.0}) >= ArrayPtr<const double>({1.0})));
-  KJ_EXPECT((ArrayPtr<const double>({0.0}) < ArrayPtr<const double>({1.0})));
-  KJ_EXPECT(!(ArrayPtr<const double>({0.0}) > ArrayPtr<const double>({1.0})));
-  KJ_EXPECT((ArrayPtr<const double>({0.0, 0.0}) <=> ArrayPtr<const double>({0.0})) == std::partial_ordering::greater);
-  KJ_EXPECT(!(ArrayPtr<const double>({0.0, 0.0}) == ArrayPtr<const double>({0.0})));
-  KJ_EXPECT((ArrayPtr<const double>({0.0, 0.0}) != ArrayPtr<const double>({0.0})));
-  KJ_EXPECT(!(ArrayPtr<const double>({0.0, 0.0}) <= ArrayPtr<const double>({0.0})));
-  KJ_EXPECT((ArrayPtr<const double>({0.0, 0.0}) >= ArrayPtr<const double>({0.0})));
-  KJ_EXPECT(!(ArrayPtr<const double>({0.0, 0.0}) < ArrayPtr<const double>({0.0})));
-  KJ_EXPECT((ArrayPtr<const double>({0.0, 0.0}) > ArrayPtr<const double>({0.0})));
+constexpr auto strong_equal = std::strong_ordering::equal;
+constexpr auto strong_less = std::strong_ordering::less;
+constexpr auto strong_greater = std::strong_ordering::greater;
+constexpr auto unordered = std::partial_ordering::unordered;
+constexpr auto partial_equal = std::partial_ordering::equivalent;
+constexpr auto partial_less = std::partial_ordering::less;
+constexpr auto partial_greater = std::partial_ordering::greater;
 
-  double d[1] = { nan() };
-  KJ_EXPECT((ArrayPtr<double>(d, 1) <=> ArrayPtr<double>(d, 1)) == std::partial_ordering::unordered);
-  KJ_EXPECT(!(ArrayPtr<double>(d, 1) == ArrayPtr<double>(d, 1)));
-  KJ_EXPECT((ArrayPtr<double>(d, 1) != ArrayPtr<double>(d, 1)));
-  KJ_EXPECT(!(ArrayPtr<double>(d, 1) <= ArrayPtr<double>(d, 1)));
-  KJ_EXPECT(!(ArrayPtr<double>(d, 1) >= ArrayPtr<double>(d, 1)));
-  KJ_EXPECT(!(ArrayPtr<double>(d, 1) < ArrayPtr<double>(d, 1)));
-  KJ_EXPECT(!(ArrayPtr<double>(d, 1) > ArrayPtr<double>(d, 1)));
-  // operator== should not use memcmp for double elements.
+template <typename A, typename B, typename C>
+struct GenericTestCase {
+  A left;
+  B right;
+  C result;
+};
+
+KJ_TEST("ArrayPtr operator <=> for nullptr type") {
+  using TestCase0 = GenericTestCase<ArrayPtr<const int>, nullptr_t, std::strong_ordering>;
+  TestCase0 testCases0[] {
+    TestCase0{{}, nullptr, strong_equal},
+    TestCase0{{123}, nullptr, strong_greater},
+  };
+  using TestCase1 = GenericTestCase<nullptr_t, ArrayPtr<const int>, std::strong_ordering>;
+  TestCase1 testCases1[] {
+    TestCase1{nullptr, {}, strong_equal},
+    TestCase1{nullptr, {123}, strong_less},
+  };
+  for(auto const& testCase : testCases0) {
+    STRONG_COMPARISONS(testCase.left, testCase.right, testCase.result);
+  }
+  for(auto const& testCase : testCases1) {
+    STRONG_COMPARISONS(testCase.left, testCase.right, testCase.result);
+  }
+}
+KJ_TEST("ArrayPtr operator <=> for same int type") {
+  using TestCase = GenericTestCase<ArrayPtr<const int>, ArrayPtr<const int>, std::strong_ordering>;
+  TestCase testCases[] = {
+    TestCase{{1,2}, {1,2}, strong_equal},
+    TestCase{{1,2}, {1,3}, strong_less},
+    TestCase{{1,3}, {1,2}, strong_greater},
+    TestCase{{1}, {1,2}, strong_less},
+    TestCase{{2}, {1,2}, strong_greater},
+  };
+
+  for(auto const& testCase : testCases) {
+    STRONG_COMPARISONS(testCase.left, testCase.right, testCase.result);
+  }
+}
+
+KJ_TEST("ArrayPtr operator <=> for different int type") {
+  using TestCase = GenericTestCase<ArrayPtr<const int>, ArrayPtr<const short>, std::strong_ordering>;
+  TestCase testCases[] = {
+    TestCase{{1,2}, {1,2}, strong_equal},
+    TestCase{{1,2}, {1,3}, strong_less},
+    TestCase{{1,3}, {1,2}, strong_greater},
+    TestCase{{1}, {1,2}, strong_less},
+    TestCase{{2}, {1,2}, strong_greater},
+  };
+
+  for(auto const& testCase : testCases) {
+    STRONG_COMPARISONS(testCase.left, testCase.right, testCase.result);
+  }
+}
+
+KJ_TEST("ArrayPtr operator <=> for different string type") {
+  using TestCase = GenericTestCase<ArrayPtr<const StringPtr>, ArrayPtr<const char* const>, std::strong_ordering>;
+  TestCase testCases[] = {
+    TestCase{{"foo", "bar"}, {"foo", "bar"}, strong_equal},
+    TestCase{{"foo", "bar"}, {"foo", "baz"}, strong_less},
+    TestCase{{"foo", "bar"}, {"foo"}, strong_greater},
+  };
+
+  for(auto const& testCase : testCases) {
+    STRONG_COMPARISONS(testCase.left, testCase.right, testCase.result);
+  }
+}
+
+KJ_TEST("ArrayPtr operator <=> double") {
+  // This test helps make sure week orderings are implemented correctly
+
+  using TestCase = GenericTestCase<ArrayPtr<const double>, ArrayPtr<const double>, std::partial_ordering>;
+  double d[1] = {nan()};
+  TestCase testCases[] = {
+    TestCase{{0.0}, {0.0}, partial_equal},
+    TestCase{{1.0}, {0.0}, partial_greater},
+    TestCase{{0.0}, {1.0}, partial_less},
+    TestCase{{0.0, 0.0}, {0.0}, partial_greater},
+    TestCase{{0.0, 0.0}, {1.0}, partial_less},
+    TestCase{d, d, unordered}, // memcmp should not be used for doubles
+  };
+
+  for(auto const& testCase : testCases) {
+    WEAK_COMPARISONS(testCase.left, testCase.right, testCase.result);
+  }
 }
 
 KJ_TEST("kj::range()") {
