@@ -853,7 +853,7 @@ struct GenericTestCase {
 };
 
 template<typename A, typename B, typename C>
-GenericTestCase<Array<A>, Array<B>, C> testCaseItem(
+GenericTestCase<Array<A>, Array<B>, C> testArrayItem(
   std::initializer_list<A> a, 
   std::initializer_list<B> b,
   C result) {
@@ -878,11 +878,11 @@ KJ_TEST("ArrayPtr operator <=> for same int type") {
   using O = std::strong_ordering;
   using TestCase = GenericTestCase<Array<L>, Array<R>, O>;
   TestCase testCases[] = {
-    testCaseItem<L,R,O>({1,2}, {1,2}, strong_equal),
-    testCaseItem<L,R,O>({1,2}, {1,3}, strong_less),
-    testCaseItem<L,R,O>({1,3}, {1,2}, strong_greater),
-    testCaseItem<L,R,O>({1}  , {1,2}, strong_less),
-    testCaseItem<L,R,O>({2}  , {1,2}, strong_greater),
+    testArrayItem<L,R,O>({1,2}, {1,2}, strong_equal),
+    testArrayItem<L,R,O>({1,2}, {1,3}, strong_less),
+    testArrayItem<L,R,O>({1,3}, {1,2}, strong_greater),
+    testArrayItem<L,R,O>({1}  , {1,2}, strong_less),
+    testArrayItem<L,R,O>({2}  , {1,2}, strong_greater),
   };
 
   for(auto const& testCase : testCases) {
@@ -898,11 +898,11 @@ KJ_TEST("ArrayPtr operator <=> for different int type") {
   using O = std::strong_ordering;
   using TestCase = GenericTestCase<Array<L>, Array<R>, O>;
   TestCase testCases[] = {
-    testCaseItem<L,R,O>({1,2}, {1,2}, strong_equal),
-    testCaseItem<L,R,O>({1,2}, {1,3}, strong_less),
-    testCaseItem<L,R,O>({1,3}, {1,2}, strong_greater),
-    testCaseItem<L,R,O>({1}  , {1,2}, strong_less),
-    testCaseItem<L,R,O>({2}  , {1,2}, strong_greater),
+    testArrayItem<L,R,O>({1,2}, {1,2}, strong_equal),
+    testArrayItem<L,R,O>({1,2}, {1,3}, strong_less),
+    testArrayItem<L,R,O>({1,3}, {1,2}, strong_greater),
+    testArrayItem<L,R,O>({1}  , {1,2}, strong_less),
+    testArrayItem<L,R,O>({2}  , {1,2}, strong_greater),
   };
 
   for(auto const& testCase : testCases) {
@@ -919,12 +919,12 @@ KJ_TEST("ArrayPtr operator <=> for different double type") {
   using TestCase = GenericTestCase<Array<L>, Array<R>, O>;
   const double d = nan();
   TestCase testCases[] = {
-    testCaseItem<L,R,O>({0.0}, {0.0}, partial_equal),
-    testCaseItem<L,R,O>({1.0}, {0.0}, partial_greater),
-    testCaseItem<L,R,O>({0.0}, {1.0}, partial_less),
-    testCaseItem<L,R,O>({0,0, 0.0}, {0.0}, partial_greater),
-    testCaseItem<L,R,O>({0.0, 0.0}, {1.0}, partial_less),
-    testCaseItem<L,R,O>({d}, {d}, unordered),
+    testArrayItem<L,R,O>({0.0}, {0.0}, partial_equal),
+    testArrayItem<L,R,O>({1.0}, {0.0}, partial_greater),
+    testArrayItem<L,R,O>({0.0}, {1.0}, partial_less),
+    testArrayItem<L,R,O>({0,0, 0.0}, {0.0}, partial_greater),
+    testArrayItem<L,R,O>({0.0, 0.0}, {1.0}, partial_less),
+    testArrayItem<L,R,O>({d}, {d}, unordered),
   };
 
   for(auto const& testCase : testCases) {
@@ -933,13 +933,11 @@ KJ_TEST("ArrayPtr operator <=> for different double type") {
 }
 
 KJ_TEST("ArrayPtr operator <=> for different string type") {
-  using L = const StringPtr;
-  using APL = ArrayPtr<L>;
-  using R = const char* const;
-  using APR = ArrayPtr<R>;
-  STRONG_COMPARISON_TESTS(APL({"foo", "bar"}), APR({"foo", "bar"}), strong_equal);
-  STRONG_COMPARISON_TESTS(APL({"foo", "bar"}), APR({"foo", "baz"}), strong_less);
-  STRONG_COMPARISON_TESTS(APL({"foo", "bar"}), APR({"foo"}), strong_greater);
+  using Left = ArrayPtr<const StringPtr>;
+  using Right = ArrayPtr<const char* const>;
+  STRONG_COMPARISON_TESTS(Left({"foo", "bar"}), Right({"foo", "bar"}), strong_equal);
+  STRONG_COMPARISON_TESTS(Left({"foo", "bar"}), Right({"foo", "baz"}), strong_less);
+  STRONG_COMPARISON_TESTS(Left({"foo", "bar"}), Right({"foo"}), strong_greater);
 }
 
 KJ_TEST("kj::range()") {
