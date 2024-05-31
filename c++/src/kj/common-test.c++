@@ -818,34 +818,6 @@ KJ_TEST("ArrayPtr operator ==") {
   KJ_EXPECT(ArrayPtr<double>(d, 1) != ArrayPtr<double>(d, 1));
 }
 
-#define COMPARISON(a, b, op, ans) \
-  ((a) op (b)) == (ans)
-
-#define ALL_COMPARISONS(a,b, ans0, ans1, ans2, ans3, ans4, ans5, ans6) \
-  KJ_EXPECT(COMPARISON(a, b, <=>, (ans0)));   \
-  KJ_EXPECT(COMPARISON(a, b, ==, (ans1)));    \
-  KJ_EXPECT(COMPARISON(a, b, !=, (ans2)));    \
-  KJ_EXPECT(COMPARISON(a, b, <=, (ans3)));    \
-  KJ_EXPECT(COMPARISON(a, b, >=, (ans4)));    \
-  KJ_EXPECT(COMPARISON(a, b, <, (ans5)));     \
-  KJ_EXPECT(COMPARISON(a, b, >, (ans6)))    
-
-#define STRONG_COMPARISONS(a, b, ans3way) \
-  ALL_COMPARISONS(a, b, ans3way, ans3way == std::strong_ordering::equal, \
-    ans3way != std::strong_ordering::equal, \
-    ans3way != std::strong_ordering::greater, \
-    ans3way != std::strong_ordering::less, \
-    ans3way == std::strong_ordering::less, \
-    ans3way == std::strong_ordering::greater)
-
-#define WEAK_COMPARISONS(a, b, ans3way) \
-  ALL_COMPARISONS(a, b, ans3way, ans3way == std::weak_ordering::equivalent, \
-    ans3way != std::partial_ordering::equivalent, \
-    ans3way != std::weak_ordering::greater && ans3way != std::partial_ordering::unordered, \
-    ans3way != std::weak_ordering::less && ans3way != std::partial_ordering::unordered, \
-    ans3way == std::weak_ordering::less, \
-    ans3way == std::weak_ordering::greater)
-
 constexpr auto strong_equal = std::strong_ordering::equal;
 constexpr auto strong_less = std::strong_ordering::less;
 constexpr auto strong_greater = std::strong_ordering::greater;
@@ -853,6 +825,47 @@ constexpr auto unordered = std::partial_ordering::unordered;
 constexpr auto partial_equal = std::partial_ordering::equivalent;
 constexpr auto partial_less = std::partial_ordering::less;
 constexpr auto partial_greater = std::partial_ordering::greater;
+
+#define COMPARISON(a, b, op, ans) \
+  ((a) op (b)) == (ans)
+
+#define ALL_COMPARISONS(a, b, ans_twc, rev_twc, ans_eq, ans_lte, ans_gte, ans_lt, ans_gt) \
+  KJ_EXPECT(COMPARISON(a, b, <=>, (ans_twc)));   \
+  KJ_EXPECT(COMPARISON(b, a, <=>, (rev_twc)));   \
+  KJ_EXPECT(COMPARISON(a, b, ==, (ans_eq)));    \
+  KJ_EXPECT(COMPARISON(b, a, ==, (ans_eq)));    \
+  KJ_EXPECT(COMPARISON(a, b, !=, !(ans_eq)));    \
+  KJ_EXPECT(COMPARISON(b, a, !=, !(ans_eq)));    \
+  KJ_EXPECT(COMPARISON(a, b, <=, (ans_lte)));    \
+  KJ_EXPECT(COMPARISON(b, a, <=, (ans_gte)));    \
+  KJ_EXPECT(COMPARISON(a, b, >=, (ans_gte)));    \
+  KJ_EXPECT(COMPARISON(b, a, >=, (ans_lte)));    \
+  KJ_EXPECT(COMPARISON(a, b, <, (ans_lt)));     \
+  KJ_EXPECT(COMPARISON(b, a, <, (ans_gt)));     \
+  KJ_EXPECT(COMPARISON(a, b, >, (ans_gt)));     \
+  KJ_EXPECT(COMPARISON(b, a, >, (ans_lt)))
+
+#define STRONG_COMPARISONS(a, b, ans3way) \
+  ALL_COMPARISONS(a, b, ans3way, \
+    ans3way == strong_greater ? strong_less : \
+    ans3way == strong_less ? strong_greater: strong_equal, \
+    ans3way == strong_equal, \
+    ans3way != strong_greater, \
+    ans3way != strong_less, \
+    ans3way == strong_less, \
+    ans3way == strong_greater)
+
+#define WEAK_COMPARISONS(a, b, ans3way) \
+  ALL_COMPARISONS(a, b, ans3way,  \
+    ans3way == partial_greater ? partial_less : \
+    ans3way == partial_less ? partial_greater: \
+      ans3way, \
+    ans3way == partial_equal, \
+    ans3way != partial_greater && ans3way != unordered, \
+    ans3way != partial_less && ans3way != unordered, \
+    ans3way == partial_less, \
+    ans3way == partial_greater)
+
 
 template <typename A, typename B, typename C>
 struct GenericTestCase {
@@ -862,20 +875,12 @@ struct GenericTestCase {
 };
 
 KJ_TEST("ArrayPtr operator <=> for nullptr type") {
-  using TestCase0 = GenericTestCase<ArrayPtr<const int>, nullptr_t, std::strong_ordering>;
-  TestCase0 testCases0[] {
-    TestCase0{{}, nullptr, strong_equal},
-    TestCase0{{123}, nullptr, strong_greater},
+  using TestCase = GenericTestCase<ArrayPtr<const int>, nullptr_t, std::strong_ordering>;
+  TestCase testCases[] = {
+    TestCase{{}, nullptr, strong_equal},
+    TestCase{{123}, nullptr, strong_greater},
   };
-  using TestCase1 = GenericTestCase<nullptr_t, ArrayPtr<const int>, std::strong_ordering>;
-  TestCase1 testCases1[] {
-    TestCase1{nullptr, {}, strong_equal},
-    TestCase1{nullptr, {123}, strong_less},
-  };
-  for(auto const& testCase : testCases0) {
-    STRONG_COMPARISONS(testCase.left, testCase.right, testCase.result);
-  }
-  for(auto const& testCase : testCases1) {
+  for(auto const& testCase : testCases) {
     STRONG_COMPARISONS(testCase.left, testCase.right, testCase.result);
   }
 }
