@@ -793,31 +793,6 @@ TEST(Common, ArrayAsBytes) {
   }
 }
 
-KJ_TEST("ArrayPtr operator ==") {
-  KJ_EXPECT(ArrayPtr<const int>({123, 456}) == ArrayPtr<const int>({123, 456}));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) != ArrayPtr<const int>({123, 456})));
-  KJ_EXPECT(ArrayPtr<const int>({123, 456}) != ArrayPtr<const int>({123, 321}));
-  KJ_EXPECT(ArrayPtr<const int>({123, 456}) != ArrayPtr<const int>({123}));
-
-  KJ_EXPECT(ArrayPtr<const int>({123, 456}) == ArrayPtr<const short>({123, 456}));
-  KJ_EXPECT(!(ArrayPtr<const int>({123, 456}) != ArrayPtr<const short>({123, 456})));
-  KJ_EXPECT(ArrayPtr<const int>({123, 456}) != ArrayPtr<const short>({123, 321}));
-  KJ_EXPECT(ArrayPtr<const int>({123, 456}) != ArrayPtr<const short>({123}));
-
-  KJ_EXPECT((ArrayPtr<const StringPtr>({"foo", "bar"}) ==
-             ArrayPtr<const char* const>({"foo", "bar"})));
-  KJ_EXPECT(!(ArrayPtr<const StringPtr>({"foo", "bar"}) !=
-             ArrayPtr<const char* const>({"foo", "bar"})));
-  KJ_EXPECT((ArrayPtr<const StringPtr>({"foo", "bar"}) !=
-             ArrayPtr<const char* const>({"foo", "baz"})));
-  KJ_EXPECT((ArrayPtr<const StringPtr>({"foo", "bar"}) !=
-             ArrayPtr<const char* const>({"foo"})));
-
-  // operator== should not use memcmp for double elements.
-  double d[1] = { nan() };
-  KJ_EXPECT(ArrayPtr<double>(d, 1) != ArrayPtr<double>(d, 1));
-}
-
 constexpr auto strong_equal = std::strong_ordering::equal;
 constexpr auto strong_less = std::strong_ordering::less;
 constexpr auto strong_greater = std::strong_ordering::greater;
@@ -845,7 +820,7 @@ constexpr auto partial_greater = std::partial_ordering::greater;
   KJ_EXPECT(COMPARISON(a, b, >, (ans_gt)));     \
   KJ_EXPECT(COMPARISON(b, a, >, (ans_lt)))
 
-#define STRONG_COMPARISONS(a, b, ans3way) \
+#define STRONG_COMPARISON_TESTS(a, b, ans3way) \
   ALL_COMPARISONS(a, b, ans3way, \
     ans3way == strong_greater ? strong_less : \
     ans3way == strong_less ? strong_greater: strong_equal, \
@@ -855,9 +830,7 @@ constexpr auto partial_greater = std::partial_ordering::greater;
     ans3way == strong_less, \
     ans3way == strong_greater)
 
-#define SC(a, b, c) STRONG_COMPARISONS(a, b, c)
-
-#define WEAK_COMPARISONS(a, b, ans3way) \
+#define PARTIAL_COMPARSION_TESTS(a, b, ans3way) \
   ALL_COMPARISONS(a, b, ans3way,  \
     ans3way == partial_greater ? partial_less : \
     ans3way == partial_less ? partial_greater: \
@@ -880,7 +853,7 @@ struct GenericTestCase {
 };
 
 template<typename A, typename B, typename C>
-GenericTestCase<Array<A>, Array<B>, C> cHTC(
+GenericTestCase<Array<A>, Array<B>, C> testCaseItem(
   std::initializer_list<A> a, 
   std::initializer_list<B> b,
   C result) {
@@ -894,7 +867,7 @@ KJ_TEST("ArrayPtr operator <=> for nullptr type") {
     TestCase{{123}, nullptr, strong_greater},
   };
   for(auto const& testCase : testCases) {
-    STRONG_COMPARISONS(testCase.left, testCase.right, testCase.result);
+    STRONG_COMPARISON_TESTS(testCase.left, testCase.right, testCase.result);
   }
 }
 KJ_TEST("ArrayPtr operator <=> for same int type") {
@@ -905,15 +878,15 @@ KJ_TEST("ArrayPtr operator <=> for same int type") {
   using O = std::strong_ordering;
   using TestCase = GenericTestCase<Array<L>, Array<R>, O>;
   TestCase testCases[] = {
-    cHTC<L,R,O>({1,2}, {1,2}, strong_equal),
-    cHTC<L,R,O>({1,2}, {1,3}, strong_less),
-    cHTC<L,R,O>({1,3}, {1,2}, strong_greater),
-    cHTC<L,R,O>({1}  , {1,2}, strong_less),
-    cHTC<L,R,O>({2}  , {1,2}, strong_greater),
+    testCaseItem<L,R,O>({1,2}, {1,2}, strong_equal),
+    testCaseItem<L,R,O>({1,2}, {1,3}, strong_less),
+    testCaseItem<L,R,O>({1,3}, {1,2}, strong_greater),
+    testCaseItem<L,R,O>({1}  , {1,2}, strong_less),
+    testCaseItem<L,R,O>({2}  , {1,2}, strong_greater),
   };
 
   for(auto const& testCase : testCases) {
-    STRONG_COMPARISONS(APL(testCase.left), APR(testCase.right), testCase.result);
+    STRONG_COMPARISON_TESTS(APL(testCase.left), APR(testCase.right), testCase.result);
   }
 }
 
@@ -925,15 +898,15 @@ KJ_TEST("ArrayPtr operator <=> for different int type") {
   using O = std::strong_ordering;
   using TestCase = GenericTestCase<Array<L>, Array<R>, O>;
   TestCase testCases[] = {
-    cHTC<L,R,O>({1,2}, {1,2}, strong_equal),
-    cHTC<L,R,O>({1,2}, {1,3}, strong_less),
-    cHTC<L,R,O>({1,3}, {1,2}, strong_greater),
-    cHTC<L,R,O>({1}  , {1,2}, strong_less),
-    cHTC<L,R,O>({2}  , {1,2}, strong_greater),
+    testCaseItem<L,R,O>({1,2}, {1,2}, strong_equal),
+    testCaseItem<L,R,O>({1,2}, {1,3}, strong_less),
+    testCaseItem<L,R,O>({1,3}, {1,2}, strong_greater),
+    testCaseItem<L,R,O>({1}  , {1,2}, strong_less),
+    testCaseItem<L,R,O>({2}  , {1,2}, strong_greater),
   };
 
   for(auto const& testCase : testCases) {
-    STRONG_COMPARISONS(APL(testCase.left), APR(testCase.right), testCase.result);
+    STRONG_COMPARISON_TESTS(APL(testCase.left), APR(testCase.right), testCase.result);
   }
 }
 
@@ -946,16 +919,16 @@ KJ_TEST("ArrayPtr operator <=> for different double type") {
   using TestCase = GenericTestCase<Array<L>, Array<R>, O>;
   const double d = nan();
   TestCase testCases[] = {
-    cHTC<L,R,O>({0.0}, {0.0}, partial_equal),
-    cHTC<L,R,O>({1.0}, {0.0}, partial_greater),
-    cHTC<L,R,O>({0.0}, {1.0}, partial_less),
-    cHTC<L,R,O>({0,0, 0.0}, {0.0}, partial_greater),
-    cHTC<L,R,O>({0.0, 0.0}, {1.0}, partial_less),
-    cHTC<L,R,O>({d}, {d}, unordered),
+    testCaseItem<L,R,O>({0.0}, {0.0}, partial_equal),
+    testCaseItem<L,R,O>({1.0}, {0.0}, partial_greater),
+    testCaseItem<L,R,O>({0.0}, {1.0}, partial_less),
+    testCaseItem<L,R,O>({0,0, 0.0}, {0.0}, partial_greater),
+    testCaseItem<L,R,O>({0.0, 0.0}, {1.0}, partial_less),
+    testCaseItem<L,R,O>({d}, {d}, unordered),
   };
 
   for(auto const& testCase : testCases) {
-    WEAK_COMPARISONS(APL(testCase.left), APR(testCase.right), testCase.result);
+    PARTIAL_COMPARSION_TESTS(APL(testCase.left), APR(testCase.right), testCase.result);
   }
 }
 
@@ -964,9 +937,9 @@ KJ_TEST("ArrayPtr operator <=> for different string type") {
   using APL = ArrayPtr<L>;
   using R = const char* const;
   using APR = ArrayPtr<R>;
-  SC(APL({"foo", "bar"}), APR({"foo", "bar"}), strong_equal);
-  SC(APL({"foo", "bar"}), APR({"foo", "baz"}), strong_less);
-  SC(APL({"foo", "bar"}), APR({"foo"}), strong_greater);
+  STRONG_COMPARISON_TESTS(APL({"foo", "bar"}), APR({"foo", "bar"}), strong_equal);
+  STRONG_COMPARISON_TESTS(APL({"foo", "bar"}), APR({"foo", "baz"}), strong_less);
+  STRONG_COMPARISON_TESTS(APL({"foo", "bar"}), APR({"foo"}), strong_greater);
 }
 
 KJ_TEST("kj::range()") {
