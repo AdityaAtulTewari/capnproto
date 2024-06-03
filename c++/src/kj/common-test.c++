@@ -839,33 +839,17 @@ void partial_comparisons_tests(A a, B b, std::partial_ordering ans3way){
     ans3way == partial_greater);
 }
 
-template <typename A, typename B, typename C>
-struct GenericTestCase {
-  using LeftType = A;
-  using RightType = B;
-  using ResultType = C;
-  A left;
-  B right;
-  C result;
-};
-
-template<typename A, typename B, typename C>
-GenericTestCase<Array<A>, Array<B>, C> testArrayItem(
-  std::initializer_list<A> a, 
-  std::initializer_list<B> b,
-  C result) {
-    return GenericTestCase<Array<A>, Array<B>, C>{heapArray(a), heapArray(b), result};
-  }
-
 KJ_TEST("ArrayPtr operator <=> for nullptr type") {
   struct TestCase {
     Array<const int> left;
     nullptr_t right;
     std::strong_ordering result;
+    TestCase(std::initializer_list<const int> left, nullptr_t right, std::strong_ordering result) :
+      left(heapArray(left)), right(right), result(result) {}
   };
   TestCase testCases[] = {
-    {heapArray<const int>({}), nullptr, strong_equal},
-    {heapArray({123}), nullptr, strong_greater},
+    {{}, nullptr, strong_equal},
+    {{123}, nullptr, strong_greater},
   };
   for(auto const& testCase : testCases) {
     strong_comparisons_tests(ArrayPtr<const int>(testCase.left), testCase.right, testCase.result);
@@ -876,13 +860,15 @@ KJ_TEST("ArrayPtr operator <=> for same int type") {
     Array<const int> left;
     Array<const int> right;
     std::strong_ordering result;
+    TestCase(std::initializer_list<const int> left, std::initializer_list<const int> right, std::strong_ordering result) :
+      left(heapArray(left)), right(heapArray(right)), result(result) {}
   };
   TestCase testCases[] = {
-    {heapArray({1,2}), heapArray({1,2}), strong_equal},
-    {heapArray({1,2}), heapArray({1,3}), strong_less},
-    {heapArray({1,3}), heapArray({1,2}), strong_greater},
-    {heapArray({1})  , heapArray({1,2}), strong_less},
-    {heapArray({2})  , heapArray({1,2}), strong_greater},
+    {{1,2}, {1,2}, strong_equal},
+    {{1,2}, {1,3}, strong_less},
+    {{1,3}, {1,2}, strong_greater},
+    {{1}  , {1,2}, strong_less},
+    {{2}  , {1,2}, strong_greater},
   };
 
   for(auto const& testCase : testCases) {
@@ -895,13 +881,15 @@ KJ_TEST("ArrayPtr operator <=> for different int type") {
     Array<const int> left;
     Array<const short> right;
     std::strong_ordering result;
+    TestCase(std::initializer_list<const int> left, std::initializer_list<const short> right, std::strong_ordering result) :
+      left(heapArray(left)), right(heapArray(right)), result(result) {}
   };
   TestCase testCases[] = {
-    {heapArray({1,2}), heapArray<const short>({1,2}), strong_equal},
-    {heapArray({1,2}), heapArray<const short>({1,3}), strong_less},
-    {heapArray({1,3}), heapArray<const short>({1,2}), strong_greater},
-    {heapArray({1})  , heapArray<const short>({1,2}), strong_less},
-    {heapArray({2})  , heapArray<const short>({1,2}), strong_greater},
+    {{1,2}, {1,2}, strong_equal},
+    {{1,2}, {1,3}, strong_less},
+    {{1,3}, {1,2}, strong_greater},
+    {{1}  , {1,2}, strong_less},
+    {{2}  , {1,2}, strong_greater},
   };
 
   for(auto const& testCase : testCases) {
@@ -914,15 +902,17 @@ KJ_TEST("ArrayPtr operator <=> for different double type") {
     Array<const double> left;
     Array<const double> right;
     std::partial_ordering result;
+    TestCase(std::initializer_list<const double> left, std::initializer_list<const double> right, std::partial_ordering result) :
+      left(heapArray(left)), right(heapArray(right)), result(result) {}
   };
   const double d = nan();
   TestCase testCases[] = {
-    {heapArray<const double>({0.0}), heapArray<const double>({0.0}), partial_equal},
-    {heapArray<const double>({1.0}), heapArray<const double>({0.0}), partial_greater},
-    {heapArray<const double>({0.0}), heapArray<const double>({1.0}), partial_less},
-    {heapArray<const double>({0,0, 0.0}), heapArray<const double>({0.0}), partial_greater},
-    {heapArray<const double>({0.0, 0.0}), heapArray<const double>({1.0}), partial_less},
-    {heapArray<const double>({d}), heapArray<const double>({d}), unordered},
+    {{0.0}, {0.0}, partial_equal},
+    {{1.0}, {0.0}, partial_greater},
+    {{0.0}, {1.0}, partial_less},
+    {{0,0, 0.0}, {0.0}, partial_greater},
+    {{0.0, 0.0}, {1.0}, partial_less},
+    {{d}, {d}, unordered},
   };
 
   for(auto const& testCase : testCases) {
