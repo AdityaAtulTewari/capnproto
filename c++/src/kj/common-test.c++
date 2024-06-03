@@ -839,7 +839,16 @@ void partial_comparisons_tests(A a, B b, std::partial_ordering ans3way){
     ans3way == partial_greater);
 }
 
-KJ_TEST("ArrayPtr operator <=> for nullptr type") {
+template<typename A, typename B, typename C>
+struct GenericArrayTestCase {
+  Array<A> left;
+  Array<B> right;
+  C result;
+  GenericArrayTestCase(std::initializer_list<A> left, std::initializer_list<B> right, C result) :
+    left(heapArray(left)), right(heapArray(right)), result(result) {}
+};
+
+KJ_TEST("ArrayPtr comparators for nullptr type") {
   struct TestCase {
     Array<const int> left;
     nullptr_t right;
@@ -855,14 +864,8 @@ KJ_TEST("ArrayPtr operator <=> for nullptr type") {
     strong_comparisons_tests(ArrayPtr<const int>(testCase.left), testCase.right, testCase.result);
   }
 }
-KJ_TEST("ArrayPtr operator <=> for same int type") {
-  struct TestCase {
-    Array<const int> left;
-    Array<const int> right;
-    std::strong_ordering result;
-    TestCase(std::initializer_list<const int> left, std::initializer_list<const int> right, std::strong_ordering result) :
-      left(heapArray(left)), right(heapArray(right)), result(result) {}
-  };
+KJ_TEST("ArrayPtr comparators for same int type") {
+  using TestCase = GenericArrayTestCase<const int, const int, std::strong_ordering>;
   TestCase testCases[] = {
     {{1,2}, {1,2}, strong_equal},
     {{1,2}, {1,3}, strong_less},
@@ -876,14 +879,8 @@ KJ_TEST("ArrayPtr operator <=> for same int type") {
   }
 }
 
-KJ_TEST("ArrayPtr operator <=> for different int type") {
-  struct TestCase {
-    Array<const int> left;
-    Array<const short> right;
-    std::strong_ordering result;
-    TestCase(std::initializer_list<const int> left, std::initializer_list<const short> right, std::strong_ordering result) :
-      left(heapArray(left)), right(heapArray(right)), result(result) {}
-  };
+KJ_TEST("ArrayPtr comparators for different int type") {
+  using TestCase = GenericArrayTestCase<const int, const short, std::strong_ordering>;
   TestCase testCases[] = {
     {{1,2}, {1,2}, strong_equal},
     {{1,2}, {1,3}, strong_less},
@@ -897,14 +894,8 @@ KJ_TEST("ArrayPtr operator <=> for different int type") {
   }
 }
 
-KJ_TEST("ArrayPtr operator <=> for different double type") {
-  struct TestCase {
-    Array<const double> left;
-    Array<const double> right;
-    std::partial_ordering result;
-    TestCase(std::initializer_list<const double> left, std::initializer_list<const double> right, std::partial_ordering result) :
-      left(heapArray(left)), right(heapArray(right)), result(result) {}
-  };
+KJ_TEST("ArrayPtr comparators for different doubles") {
+  using TestCase = GenericArrayTestCase<const double, const double, std::partial_ordering>;
   const double d = nan();
   TestCase testCases[] = {
     {{0.0}, {0.0}, partial_equal},
