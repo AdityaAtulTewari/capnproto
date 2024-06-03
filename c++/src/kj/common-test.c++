@@ -872,9 +872,7 @@ KJ_TEST("ArrayPtr operator <=> for nullptr type") {
 }
 KJ_TEST("ArrayPtr operator <=> for same int type") {
   using L = const int;
-  using APL = ArrayPtr<L>;
   using R = const int;
-  using APR = ArrayPtr<R>;
   using O = std::strong_ordering;
   using TestCase = GenericTestCase<Array<L>, Array<R>, O>;
   TestCase testCases[] = {
@@ -886,15 +884,13 @@ KJ_TEST("ArrayPtr operator <=> for same int type") {
   };
 
   for(auto const& testCase : testCases) {
-    STRONG_COMPARISON_TESTS(APL(testCase.left), APR(testCase.right), testCase.result);
+    STRONG_COMPARISON_TESTS(ArrayPtr<L>(testCase.left), ArrayPtr<R>(testCase.right), testCase.result);
   }
 }
 
 KJ_TEST("ArrayPtr operator <=> for different int type") {
   using L = const int;
-  using APL = ArrayPtr<L>;
   using R = const short;
-  using APR = ArrayPtr<R>;
   using O = std::strong_ordering;
   using TestCase = GenericTestCase<Array<L>, Array<R>, O>;
   TestCase testCases[] = {
@@ -906,15 +902,13 @@ KJ_TEST("ArrayPtr operator <=> for different int type") {
   };
 
   for(auto const& testCase : testCases) {
-    STRONG_COMPARISON_TESTS(APL(testCase.left), APR(testCase.right), testCase.result);
+    STRONG_COMPARISON_TESTS(ArrayPtr<L>(testCase.left), ArrayPtr<R>(testCase.right), testCase.result);
   }
 }
 
 KJ_TEST("ArrayPtr operator <=> for different double type") {
   using L = const double;
-  using APL = ArrayPtr<L>;
   using R = const double;
-  using APR = ArrayPtr<R>;
   using O = std::partial_ordering;
   using TestCase = GenericTestCase<Array<L>, Array<R>, O>;
   const double d = nan();
@@ -928,7 +922,7 @@ KJ_TEST("ArrayPtr operator <=> for different double type") {
   };
 
   for(auto const& testCase : testCases) {
-    PARTIAL_COMPARSION_TESTS(APL(testCase.left), APR(testCase.right), testCase.result);
+    PARTIAL_COMPARSION_TESTS(ArrayPtr<L>(testCase.left), ArrayPtr<R>(testCase.right), testCase.result);
   }
 }
 
