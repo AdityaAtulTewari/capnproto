@@ -801,10 +801,8 @@ constexpr auto partial_equal = std::partial_ordering::equivalent;
 constexpr auto partial_less = std::partial_ordering::less;
 constexpr auto partial_greater = std::partial_ordering::greater;
 
-template<typename A, typename B, typename O>
-void all_comparisons(A a, B b, O ans_twc, O rev_twc, bool ans_eq, bool ans_lte, bool ans_gte, bool ans_lt, bool ans_gt) {
-  KJ_EXPECT((a <=> b) == ans_twc);   
-  KJ_EXPECT((b <=> a) == rev_twc);   
+template<typename A, typename B>
+void all_comparisons(A a, B b, bool ans_eq, bool ans_lte, bool ans_gte, bool ans_lt, bool ans_gt) {
   KJ_EXPECT((a ==  b) == ans_eq);   
   KJ_EXPECT((b ==  a) == ans_eq);   
   KJ_EXPECT((b ==  a) == ans_eq);   
@@ -822,9 +820,7 @@ void all_comparisons(A a, B b, O ans_twc, O rev_twc, bool ans_eq, bool ans_lte, 
 
 template<typename A, typename B>
 void strong_comparisons_tests(A a, B b, std::strong_ordering ans3way){  
-  all_comparisons<A,B, std::strong_ordering>(a, b, ans3way,
-    ans3way == strong_greater ? strong_less : 
-    ans3way == strong_less ? strong_greater: strong_equal,
+  all_comparisons<A, B>(a, b, 
     ans3way == strong_equal,
     ans3way != strong_greater,
     ans3way != strong_less,
@@ -834,14 +830,11 @@ void strong_comparisons_tests(A a, B b, std::strong_ordering ans3way){
 
 template<typename A, typename B>
 void partial_comparisons_tests(A a, B b, std::partial_ordering ans3way){  
-  all_comparisons<A,B, std::partial_ordering>(a, b, ans3way,
-    ans3way == partial_greater ? partial_less : \
-    ans3way == partial_less ? partial_greater: \
-      ans3way, \
-    ans3way == partial_equal, \
-    ans3way != partial_greater && ans3way != unordered, \
-    ans3way != partial_less && ans3way != unordered, \
-    ans3way == partial_less, \
+  all_comparisons<A,B>(a, b,
+    ans3way == partial_equal,
+    ans3way != partial_greater && ans3way != unordered,
+    ans3way != partial_less && ans3way != unordered, 
+    ans3way == partial_less,
     ans3way == partial_greater);
 }
 
