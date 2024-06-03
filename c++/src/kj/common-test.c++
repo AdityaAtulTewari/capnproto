@@ -24,6 +24,7 @@
 #include <inttypes.h>
 #include <kj/compat/gtest.h>
 #include <span>
+#include <compare>
 
 namespace kj {
 namespace {
@@ -857,68 +858,75 @@ GenericTestCase<Array<A>, Array<B>, C> testArrayItem(
   }
 
 KJ_TEST("ArrayPtr operator <=> for nullptr type") {
-  using TestCase = GenericTestCase<ArrayPtr<const int>, nullptr_t, std::strong_ordering>;
-  TestCase testCases[] {
-    TestCase{{}, nullptr, strong_equal},
-    TestCase{{123}, nullptr, strong_greater},
+  struct TestCase {
+    Array<const int> left;
+    nullptr_t right;
+    std::strong_ordering result;
+  };
+  TestCase testCases[] = {
+    {heapArray<const int>({}), nullptr, strong_equal},
+    {heapArray({123}), nullptr, strong_greater},
   };
   for(auto const& testCase : testCases) {
-    strong_comparisons_tests(testCase.left, testCase.right, testCase.result);
+    strong_comparisons_tests(ArrayPtr<const int>(testCase.left), testCase.right, testCase.result);
   }
 }
 KJ_TEST("ArrayPtr operator <=> for same int type") {
-  using L = const int;
-  using R = const int;
-  using O = std::strong_ordering;
-  using TestCase = GenericTestCase<Array<L>, Array<R>, O>;
+  struct TestCase {
+    Array<const int> left;
+    Array<const int> right;
+    std::strong_ordering result;
+  };
   TestCase testCases[] = {
-    testArrayItem<L,R,O>({1,2}, {1,2}, strong_equal),
-    testArrayItem<L,R,O>({1,2}, {1,3}, strong_less),
-    testArrayItem<L,R,O>({1,3}, {1,2}, strong_greater),
-    testArrayItem<L,R,O>({1}  , {1,2}, strong_less),
-    testArrayItem<L,R,O>({2}  , {1,2}, strong_greater),
+    {heapArray({1,2}), heapArray({1,2}), strong_equal},
+    {heapArray({1,2}), heapArray({1,3}), strong_less},
+    {heapArray({1,3}), heapArray({1,2}), strong_greater},
+    {heapArray({1})  , heapArray({1,2}), strong_less},
+    {heapArray({2})  , heapArray({1,2}), strong_greater},
   };
 
   for(auto const& testCase : testCases) {
-    strong_comparisons_tests(ArrayPtr<L>(testCase.left), ArrayPtr<R>(testCase.right), testCase.result);
+    strong_comparisons_tests(ArrayPtr<const int>(testCase.left), ArrayPtr<const int>(testCase.right), testCase.result);
   }
 }
 
 KJ_TEST("ArrayPtr operator <=> for different int type") {
-  using L = const int;
-  using R = const short;
-  using O = std::strong_ordering;
-  using TestCase = GenericTestCase<Array<L>, Array<R>, O>;
+  struct TestCase {
+    Array<const int> left;
+    Array<const short> right;
+    std::strong_ordering result;
+  };
   TestCase testCases[] = {
-    testArrayItem<L,R,O>({1,2}, {1,2}, strong_equal),
-    testArrayItem<L,R,O>({1,2}, {1,3}, strong_less),
-    testArrayItem<L,R,O>({1,3}, {1,2}, strong_greater),
-    testArrayItem<L,R,O>({1}  , {1,2}, strong_less),
-    testArrayItem<L,R,O>({2}  , {1,2}, strong_greater),
+    {heapArray({1,2}), heapArray<const short>({1,2}), strong_equal},
+    {heapArray({1,2}), heapArray<const short>({1,3}), strong_less},
+    {heapArray({1,3}), heapArray<const short>({1,2}), strong_greater},
+    {heapArray({1})  , heapArray<const short>({1,2}), strong_less},
+    {heapArray({2})  , heapArray<const short>({1,2}), strong_greater},
   };
 
   for(auto const& testCase : testCases) {
-    strong_comparisons_tests(ArrayPtr<L>(testCase.left), ArrayPtr<R>(testCase.right), testCase.result);
+    strong_comparisons_tests(ArrayPtr<const int>(testCase.left), ArrayPtr<const short>(testCase.right), testCase.result);
   }
 }
 
 KJ_TEST("ArrayPtr operator <=> for different double type") {
-  using L = const double;
-  using R = const double;
-  using O = std::partial_ordering;
-  using TestCase = GenericTestCase<Array<L>, Array<R>, O>;
+  struct TestCase {
+    Array<const double> left;
+    Array<const double> right;
+    std::partial_ordering result;
+  };
   const double d = nan();
   TestCase testCases[] = {
-    testArrayItem<L,R,O>({0.0}, {0.0}, partial_equal),
-    testArrayItem<L,R,O>({1.0}, {0.0}, partial_greater),
-    testArrayItem<L,R,O>({0.0}, {1.0}, partial_less),
-    testArrayItem<L,R,O>({0,0, 0.0}, {0.0}, partial_greater),
-    testArrayItem<L,R,O>({0.0, 0.0}, {1.0}, partial_less),
-    testArrayItem<L,R,O>({d}, {d}, unordered),
+    {heapArray<const double>({0.0}), heapArray<const double>({0.0}), partial_equal},
+    {heapArray<const double>({1.0}), heapArray<const double>({0.0}), partial_greater},
+    {heapArray<const double>({0.0}), heapArray<const double>({1.0}), partial_less},
+    {heapArray<const double>({0,0, 0.0}), heapArray<const double>({0.0}), partial_greater},
+    {heapArray<const double>({0.0, 0.0}), heapArray<const double>({1.0}), partial_less},
+    {heapArray<const double>({d}), heapArray<const double>({d}), unordered},
   };
 
   for(auto const& testCase : testCases) {
-    partial_comparisons_tests(ArrayPtr<L>(testCase.left), ArrayPtr<R>(testCase.right), testCase.result);
+    partial_comparisons_tests(ArrayPtr<const double>(testCase.left), ArrayPtr<const double>(testCase.right), testCase.result);
   }
 }
 
