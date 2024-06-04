@@ -102,7 +102,6 @@ KJ_BEGIN_HEADER
 #include <cstring>
 #include <initializer_list>
 #include <string.h>
-#include <compare>
 
 #if _WIN32
 // Windows likes to define macros for min() and max(). We just can't deal with this.
