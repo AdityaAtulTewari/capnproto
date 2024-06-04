@@ -911,12 +911,16 @@ KJ_TEST("ArrayPtr comparators for different doubles") {
   }
 }
 
-KJ_TEST("ArrayPtr operator <=> for different string type") {
-  using Left = ArrayPtr<const StringPtr>;
-  using Right = ArrayPtr<const char* const>;
-  strong_comparisons_tests(Left({"foo", "bar"}), Right({"foo", "bar"}), strong_equal);
-  strong_comparisons_tests(Left({"foo", "bar"}), Right({"foo", "baz"}), strong_less);
-  strong_comparisons_tests(Left({"foo", "bar"}), Right({"foo"}), strong_greater);
+KJ_TEST("ArrayPtr comparators for different string types") {
+  using TestCase = GenericArrayTestCase<const StringPtr, const char* const, std::strong_ordering>;
+  TestCase testCases[] = {
+    {{"foo", "bar"}, {"foo", "bar"}, strong_equal},
+    {{"foo", "bar"}, {"foo", "baz"}, strong_less},
+    {{"foo", "bar"}, {"foo"       }, strong_greater},
+  };
+  for(auto const& testCase : testCases) {
+    strong_comparisons_tests(ArrayPtr<const StringPtr>(testCase.left), ArrayPtr<const char* const>(testCase.right), testCase.result);
+  }
 }
 
 KJ_TEST("kj::range()") {
