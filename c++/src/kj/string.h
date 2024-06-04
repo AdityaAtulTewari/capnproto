@@ -133,16 +133,22 @@ public:
   inline constexpr const char* end() const { return content.end() - 1; }
 
   inline constexpr bool operator==(decltype(nullptr)) const { return content.size() <= 1; }
-  inline constexpr std::strong_ordering operator<=>(decltype(nullptr)) const { return content.size() <= 1 
-    ? std::strong_ordering::equal 
-    : std::strong_ordering::greater; }
+  inline constexpr bool operator<=(decltype(nullptr)) const { return *this == nullptr; }
+  inline constexpr bool operator>=(decltype(nullptr)) const { return true; }
+  inline constexpr bool operator< (decltype(nullptr)) const { return false; }
+  inline constexpr bool operator> (decltype(nullptr)) const { return content.size() > 1; }
 
-  inline bool operator==(const StringPtr& other) const;
-  inline std::strong_ordering operator<=>(const StringPtr& other) const;
-  inline bool operator< (const StringPtr& other) const = default;
-  inline bool operator> (const StringPtr& other) const = default;
-  inline bool operator<=(const StringPtr& other) const = default;
-  inline bool operator>=(const StringPtr& other) const = default;
+  inline bool operator==(const StringPtr& other) const { return content.first(content.size() - 1) == other.content.first(other.content.size() - 1); }
+  inline bool operator< (const StringPtr& other) const { return content.first(content.size() - 1) < other.content.first(other.content.size() -1); }
+  inline bool operator> (const StringPtr& other) const { return other < *this; }
+  inline bool operator<=(const StringPtr& other) const { return content.first(content.size() - 1) <= other.content.first(other.content.size() - 1); }
+  inline bool operator>=(const StringPtr& other) const { return other <= *this; }
+
+  friend inline bool operator==(const char* left, const StringPtr& right) { return StringPtr(left) == right;}
+  friend inline bool operator<=(const char* left, const StringPtr& right) { return StringPtr(left) <= right;}
+  friend inline bool operator>=(const char* left, const StringPtr& right) { return StringPtr(left) >= right;}
+  friend inline bool operator< (const char* left, const StringPtr& right) { return StringPtr(left) <  right;}
+  friend inline bool operator> (const char* left, const StringPtr& right) { return StringPtr(left) >  right;}
 
   inline StringPtr slice(size_t start) const;
   inline ArrayPtr<const char> slice(size_t start, size_t end) const;
@@ -722,15 +728,6 @@ inline constexpr StringPtr::operator ArrayPtr<const char>() const {
 
 inline constexpr ArrayPtr<const char> StringPtr::asArray() const {
   return ArrayPtr<const char>(content.begin(), content.size() - 1);
-}
-
-inline bool StringPtr::operator==(const StringPtr& other) const {
-  return content.size() == other.content.size() &&
-      memcmp(content.begin(), other.content.begin(), content.size() - 1) == 0;
-}
-
-inline std::strong_ordering StringPtr::operator<=>(const StringPtr& other) const {
-  return content <=> other.content;
 }
 
 inline StringPtr StringPtr::slice(size_t start) const {

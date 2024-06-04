@@ -1929,55 +1929,82 @@ public:
     return true;
   }
 
-  inline auto operator<=>(decltype(nullptr)) const { 
-    // returns auto because the inner type could need std::partial_ordering (ex. double)
-    using ReturnType = decltype(ptr[0] <=> ptr[0]);
-    return size_ == 0 ? (ReturnType) std::strong_ordering::equal
-                      : (ReturnType) std::strong_ordering::greater;
-  }
-
-  inline auto operator<=>(const ArrayPtr& other) const {
-    // Lexographic 3-way comparison operator, i.e. does not check the size first
-    // NOTE: does not override == which short circuits on size check
-    // returns auto because the inner type could need std::partial_ordering (ex. double)
-
-    using ReturnType = decltype(ptr[0] <=> other[0]);
+  inline bool operator<=(const ArrayPtr& other) const {
     size_t comparisonSize = kj::min(size_, other.size_);
     if constexpr (isIntegral<RemoveConst<T>>()) {
       int ret = memcmp(ptr, other.ptr, comparisonSize * sizeof(T));
-      if(ret) {
-        return ret < 0 ? (ReturnType) std::strong_ordering::less 
-                        : (ReturnType) std::strong_ordering::greater;
+      if(ret != 0){
+        return ret < 0;
       }
-    } else {
+    }
+    else {
       for(size_t i = 0; i < comparisonSize; i++) {
-        auto ret = ptr[i] <=> other[i];
-        if(ret != (ReturnType) std::strong_ordering::equal) {
-          return ret;
+        bool ret = ptr[i] == other.ptr[i];
+        if(!ret) {
+          return ptr[i] < other.ptr[i];
         }
       }
     }
-    return size_ == other.size_ ? (ReturnType) std::strong_ordering::equal 
-          : size_ <  other.size_ ? (ReturnType) std::strong_ordering::less 
-          : (ReturnType) std::strong_ordering::greater;
+    return size_ <= other.size_;
   }
 
-  template <typename U>
-  inline auto operator<=>(const ArrayPtr<U>& other) const {
-    // Lexographic 3-way comparison operator, i.e. does not check the size first
-    // NOTE: does not override == which short circuits on size check
-    // returns auto because the inner type could need std::partial_ordering (ex. double)
-
-    using ReturnType = decltype(ptr[0] <=> other[0]);
-    size_t comparisonSize = kj::min(size_, other.size());
-    for (size_t i = 0; i < comparisonSize; i++) {
-      auto ret = ptr[i] <=> other[i];
-      if (ret != (ReturnType) std::strong_ordering::equal) return ret;
+  inline bool operator<(const ArrayPtr& other) const {
+    size_t comparisonSize = kj::min(size_, other.size_);
+    if constexpr (isIntegral<RemoveConst<T>>()) {
+      int ret = memcmp(ptr, other.ptr, comparisonSize * sizeof(T));
+      if(ret != 0){
+        return ret < 0;
+      }
     }
-    return size_ == other.size() ? (ReturnType) std::strong_ordering::equal :
-              size_ <  other.size() ? (ReturnType) std::strong_ordering::less : 
-                                      (ReturnType) std::strong_ordering::greater;
+    else {
+      for(size_t i = 0; i < comparisonSize; i++) {
+        bool ret = ptr[i] == other.ptr[i];
+        if(!ret) {
+          return ptr[i] < other.ptr[i];
+        }
+      }
+    }
+    return size_ < other.size_;
   }
+
+  template<typename U>
+  inline bool operator<=(const ArrayPtr<U>& other) const {
+    size_t comparisonSize = kj::min(size_, other.size());
+    for(size_t i = 0; i < comparisonSize; i++) {
+      bool ret = ptr[i] == other.begin()[i];
+      if(!ret) {
+        return ptr[i] < other.begin()[i];
+      }
+    }
+    return size_ <= other.size();
+  }
+
+  template<typename U>
+  inline bool operator<(const ArrayPtr<U>& other) const {
+    size_t comparisonSize = kj::min(size_, other.size());
+    for(size_t i = 0; i < comparisonSize; i++) {
+      bool ret = ptr[i] == other.begin()[i];
+      if(!ret) {
+        return ptr[i] < other.begin()[i];
+      }
+    }
+    return size_ < other.size();
+  }
+
+  inline bool operator<=(decltype(nullptr)) const { return size_ == 0; }
+  inline bool operator>=(decltype(nullptr)) const { return true; }
+  inline bool operator< (decltype(nullptr)) const { return false; }
+  inline bool operator> (decltype(nullptr)) const { return size_ > 0; }
+  friend inline bool operator<=(decltype(nullptr), const ArrayPtr& other) { return other >= nullptr; }
+  friend inline bool operator>=(decltype(nullptr), const ArrayPtr& other) { return other <= nullptr; }
+  friend inline bool operator< (decltype(nullptr), const ArrayPtr& other) { return other >  nullptr; }
+  friend inline bool operator> (decltype(nullptr), const ArrayPtr& other) { return other <  nullptr; }
+  inline bool operator>=(const ArrayPtr& other) const { return other <= *this; }
+  inline bool operator> (const ArrayPtr& other) const { return other < *this; }
+  template<typename U>
+  inline bool operator>=(const ArrayPtr<U>& other) const { return other <= *this; }
+  template<typename U>
+  inline bool operator> (const ArrayPtr<U>& other) const { return other < *this; }
 
   template <typename... Attachments>
   Array<T> attach(Attachments&&... attachments) const KJ_WARN_UNUSED_RESULT;
