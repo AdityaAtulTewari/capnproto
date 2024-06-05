@@ -1972,10 +1972,6 @@ public:
   friend inline bool operator> (decltype(nullptr), const ArrayPtr& other) { return other <  nullptr; }
   inline bool operator>=(const ArrayPtr& other) const { return other <= *this; }
   inline bool operator> (const ArrayPtr& other) const { return other < *this; }
-  template<typename U>
-  inline bool operator>=(const ArrayPtr<U>& other) const { return other <= *this; }
-  template<typename U>
-  inline bool operator> (const ArrayPtr<U>& other) const { return other < *this; }
 
   template <typename... Attachments>
   Array<T> attach(Attachments&&... attachments) const KJ_WARN_UNUSED_RESULT;
