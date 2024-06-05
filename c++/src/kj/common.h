@@ -1929,8 +1929,11 @@ public:
   }
 
 private:
-  template <bool equals> 
+  template <bool strictEquals> 
   inline bool lessImpl(const ArrayPtr& other) const {
+    // Implementation for < and <=
+    // strictEquals determines if it is <= over <.
+
     size_t comparisonSize = kj::min(size_, other.size_);
     if constexpr (isIntegral<RemoveConst<T>>()) {
       int ret = memcmp(ptr, other.ptr, comparisonSize * sizeof(T));
@@ -1946,7 +1949,7 @@ private:
         }
       }
     }
-    if constexpr(equals) {
+    if constexpr(strictEquals) {
       return size_ <= other.size_;
     } else {
       return size_ <  other.size_;
