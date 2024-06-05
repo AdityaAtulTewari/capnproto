@@ -139,9 +139,9 @@ public:
   inline constexpr bool operator> (decltype(nullptr)) const { return content.size() > 1; }
 
   inline bool operator==(const StringPtr& other) const { return content.first(content.size() - 1) == other.content.first(other.content.size() - 1); }
-  inline bool operator< (const StringPtr& other) const { return content.first(content.size() - 1) < other.content.first(other.content.size() -1); }
+  inline bool operator< (const StringPtr& other) const { return content.first(content.size()) < other.content.first(other.content.size()); }
   inline bool operator> (const StringPtr& other) const { return other < *this; }
-  inline bool operator<=(const StringPtr& other) const { return content.first(content.size() - 1) <= other.content.first(other.content.size() - 1); }
+  inline bool operator<=(const StringPtr& other) const { return content.first(content.size()) <= other.content.first(other.content.size()); }
   inline bool operator>=(const StringPtr& other) const { return other <= *this; }
 
   friend inline bool operator==(const char* left, const StringPtr& right) { return StringPtr(left) == right;}

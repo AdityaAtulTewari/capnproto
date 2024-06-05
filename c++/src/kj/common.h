@@ -1928,7 +1928,9 @@ public:
     return true;
   }
 
-  inline bool operator<=(const ArrayPtr& other) const {
+private:
+  template <bool equals> 
+  inline bool lessImpl(const ArrayPtr& other) const {
     size_t comparisonSize = kj::min(size_, other.size_);
     if constexpr (isIntegral<RemoveConst<T>>()) {
       int ret = memcmp(ptr, other.ptr, comparisonSize * sizeof(T));
@@ -1944,50 +1946,20 @@ public:
         }
       }
     }
-    return size_ <= other.size_;
+    if constexpr(equals) {
+      return size_ <= other.size_;
+    } else {
+      return size_ <  other.size_;
+    }
+  }
+public:
+
+  inline bool operator<=(const ArrayPtr& other) const {
+    return this->lessImpl<true>(other);
   }
 
   inline bool operator<(const ArrayPtr& other) const {
-    size_t comparisonSize = kj::min(size_, other.size_);
-    if constexpr (isIntegral<RemoveConst<T>>()) {
-      int ret = memcmp(ptr, other.ptr, comparisonSize * sizeof(T));
-      if(ret != 0){
-        return ret < 0;
-      }
-    }
-    else {
-      for(size_t i = 0; i < comparisonSize; i++) {
-        bool ret = ptr[i] == other.ptr[i];
-        if(!ret) {
-          return ptr[i] < other.ptr[i];
-        }
-      }
-    }
-    return size_ < other.size_;
-  }
-
-  template<typename U>
-  inline bool operator<=(const ArrayPtr<U>& other) const {
-    size_t comparisonSize = kj::min(size_, other.size());
-    for(size_t i = 0; i < comparisonSize; i++) {
-      bool ret = ptr[i] == other.begin()[i];
-      if(!ret) {
-        return ptr[i] < other.begin()[i];
-      }
-    }
-    return size_ <= other.size();
-  }
-
-  template<typename U>
-  inline bool operator<(const ArrayPtr<U>& other) const {
-    size_t comparisonSize = kj::min(size_, other.size());
-    for(size_t i = 0; i < comparisonSize; i++) {
-      bool ret = ptr[i] == other.begin()[i];
-      if(!ret) {
-        return ptr[i] < other.begin()[i];
-      }
-    }
-    return size_ < other.size();
+    return this->lessImpl<false>(other);
   }
 
   inline bool operator<=(decltype(nullptr)) const { return size_ == 0; }

@@ -803,9 +803,8 @@ constexpr auto partial_less = std::partial_ordering::less;
 constexpr auto partial_greater = std::partial_ordering::greater;
 
 template<typename A, typename B>
-void all_comparisons(A a, B b, bool ans_eq, bool ans_lte, bool ans_gte, bool ans_lt, bool ans_gt) {
+void allComparisons(A a, B b, bool ans_eq, bool ans_lte, bool ans_gte, bool ans_lt, bool ans_gt) {
   KJ_EXPECT((a ==  b) == ans_eq);   
-  KJ_EXPECT((b ==  a) == ans_eq);   
   KJ_EXPECT((b ==  a) == ans_eq);   
   KJ_EXPECT((a !=  b) == !ans_eq); 
   KJ_EXPECT((b !=  a) == !ans_eq); 
@@ -820,8 +819,16 @@ void all_comparisons(A a, B b, bool ans_eq, bool ans_lte, bool ans_gte, bool ans
 }
 
 template<typename A, typename B>
-void strong_comparisons_tests(A a, B b, std::strong_ordering ans3way){  
-  all_comparisons<A, B>(a, b, 
+void equalityComparisons(A a, B b, bool ans_eq){
+  KJ_EXPECT((a ==  b) == ans_eq);   
+  KJ_EXPECT((b ==  a) == ans_eq);   
+  KJ_EXPECT((a !=  b) == !ans_eq); 
+  KJ_EXPECT((b !=  a) == !ans_eq); 
+}
+
+template<typename A, typename B>
+void strongComparisonsTests(A a, B b, std::strong_ordering ans3way){  
+  allComparisons<A, B>(a, b, 
     ans3way == strong_equal,
     ans3way != strong_greater,
     ans3way != strong_less,
@@ -830,13 +837,23 @@ void strong_comparisons_tests(A a, B b, std::strong_ordering ans3way){
 }
 
 template<typename A, typename B>
-void partial_comparisons_tests(A a, B b, std::partial_ordering ans3way){  
-  all_comparisons<A,B>(a, b,
+void strongEqualityTests(A a, B b, std::strong_ordering ans3way){  
+  equalityComparisons<A, B>(a, b, ans3way == strong_equal);
+}
+
+template<typename A, typename B>
+void partialComparisonsTests(A a, B b, std::partial_ordering ans3way){  
+  allComparisons<A,B>(a, b,
     ans3way == partial_equal,
     ans3way != partial_greater && ans3way != unordered,
     ans3way != partial_less && ans3way != unordered, 
     ans3way == partial_less,
     ans3way == partial_greater);
+}
+
+template<typename A, typename B>
+void partialEqualityTests(A a, B b, std::partial_ordering ans3way){  
+  equalityComparisons<A, B>(a, b, ans3way == partial_equal);
 }
 
 template<typename A, typename B, typename C>
@@ -861,7 +878,7 @@ KJ_TEST("ArrayPtr comparators for nullptr type") {
     {{123}, nullptr, strong_greater},
   };
   for(auto const& testCase : testCases) {
-    strong_comparisons_tests(ArrayPtr<const int>(testCase.left), testCase.right, testCase.result);
+    strongComparisonsTests(ArrayPtr<const int>(testCase.left), testCase.right, testCase.result);
   }
 }
 KJ_TEST("ArrayPtr comparators for same int type") {
@@ -875,12 +892,12 @@ KJ_TEST("ArrayPtr comparators for same int type") {
   };
 
   for(auto const& testCase : testCases) {
-    strong_comparisons_tests(ArrayPtr<const int>(testCase.left), ArrayPtr<const int>(testCase.right), testCase.result);
+    strongComparisonsTests(ArrayPtr<const int>(testCase.left), ArrayPtr<const int>(testCase.right), testCase.result);
   }
 }
 
-KJ_TEST("ArrayPtr comparators for different int type") {
-  using TestCase = GenericArrayTestCase<const int, const short, std::strong_ordering>;
+KJ_TEST("ArrayPtr equality comparisons for different int type") {
+   using TestCase = GenericArrayTestCase<const int, const short, std::strong_ordering>;
   TestCase testCases[] = {
     {{1,2}, {1,2}, strong_equal},
     {{1,2}, {1,3}, strong_less},
@@ -890,11 +907,12 @@ KJ_TEST("ArrayPtr comparators for different int type") {
   };
 
   for(auto const& testCase : testCases) {
-    strong_comparisons_tests(ArrayPtr<const int>(testCase.left), ArrayPtr<const short>(testCase.right), testCase.result);
+    strongEqualityTests(ArrayPtr<const int>(testCase.left), ArrayPtr<const short>(testCase.right), testCase.result);
   }
 }
 
-KJ_TEST("ArrayPtr comparators for different doubles") {
+
+KJ_TEST("ArrayPtr comparators for doubles (testing partial orderings)") {
   using TestCase = GenericArrayTestCase<const double, const double, std::partial_ordering>;
   const double d = nan();
   TestCase testCases[] = {
@@ -907,11 +925,11 @@ KJ_TEST("ArrayPtr comparators for different doubles") {
   };
 
   for(auto const& testCase : testCases) {
-    partial_comparisons_tests(ArrayPtr<const double>(testCase.left), ArrayPtr<const double>(testCase.right), testCase.result);
+    partialComparisonsTests(ArrayPtr<const double>(testCase.left), ArrayPtr<const double>(testCase.right), testCase.result);
   }
 }
 
-KJ_TEST("ArrayPtr comparators for different string types") {
+KJ_TEST("ArrayPtr equality for different string types") {
   using TestCase = GenericArrayTestCase<const StringPtr, const char* const, std::strong_ordering>;
   TestCase testCases[] = {
     {{"foo", "bar"}, {"foo", "bar"}, strong_equal},
@@ -919,7 +937,19 @@ KJ_TEST("ArrayPtr comparators for different string types") {
     {{"foo", "bar"}, {"foo"       }, strong_greater},
   };
   for(auto const& testCase : testCases) {
-    strong_comparisons_tests(ArrayPtr<const StringPtr>(testCase.left), ArrayPtr<const char* const>(testCase.right), testCase.result);
+    strongEqualityTests(ArrayPtr<const StringPtr>(testCase.left), ArrayPtr<const char* const>(testCase.right), testCase.result);
+  }
+}
+
+KJ_TEST("ArrayPtr comparator for different string types") {
+  using TestCase = GenericArrayTestCase<const StringPtr, const StringPtr, std::strong_ordering>;
+  TestCase testCases[] = {
+    {{"foo", "bar"}, {"foo", "bar"}, strong_equal},
+    {{"foo", "bar"}, {"foo", "baz"}, strong_less},
+    {{"foo", "bar"}, {"foo"       }, strong_greater},
+  };
+  for(auto const& testCase : testCases) {
+    strongComparisonsTests(ArrayPtr<const StringPtr>(testCase.left), ArrayPtr<const StringPtr>(testCase.right), testCase.result);
   }
 }
 
