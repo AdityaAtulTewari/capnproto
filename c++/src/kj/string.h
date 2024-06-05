@@ -144,12 +144,6 @@ public:
   inline bool operator<=(const StringPtr& other) const { return content.first(content.size()) <= other.content.first(other.content.size()); }
   inline bool operator>=(const StringPtr& other) const { return other <= *this; }
 
-  friend inline bool operator==(const char* left, const StringPtr& right) { return StringPtr(left) == right;}
-  friend inline bool operator<=(const char* left, const StringPtr& right) { return StringPtr(left) <= right;}
-  friend inline bool operator>=(const char* left, const StringPtr& right) { return StringPtr(left) >= right;}
-  friend inline bool operator< (const char* left, const StringPtr& right) { return StringPtr(left) <  right;}
-  friend inline bool operator> (const char* left, const StringPtr& right) { return StringPtr(left) >  right;}
-
   inline StringPtr slice(size_t start) const;
   inline ArrayPtr<const char> slice(size_t start, size_t end) const;
   // A string slice is only NUL-terminated if it is a suffix, so slice() has a one-parameter
