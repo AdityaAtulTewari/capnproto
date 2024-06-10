@@ -139,10 +139,7 @@ public:
   inline constexpr bool operator> (decltype(nullptr)) const { return content.size() > 1; }
 
   inline bool operator==(const StringPtr& other) const { return content.first(content.size() - 1) == other.content.first(other.content.size() - 1); }
-  inline bool operator< (const StringPtr& other) const { return content.first(content.size()) < other.content.first(other.content.size()); }
-  inline bool operator> (const StringPtr& other) const { return other < *this; }
-  inline bool operator<=(const StringPtr& other) const { return content.first(content.size()) <= other.content.first(other.content.size()); }
-  inline bool operator>=(const StringPtr& other) const { return other <= *this; }
+  inline std::strong_ordering operator<=>(const StringPtr& other) const {return content <=> other.content;}
 
   inline StringPtr slice(size_t start) const;
   inline ArrayPtr<const char> slice(size_t start, size_t end) const;

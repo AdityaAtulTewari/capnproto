@@ -102,6 +102,7 @@ KJ_BEGIN_HEADER
 #include <cstring>
 #include <initializer_list>
 #include <string.h>
+#include <compare>
 
 #if _WIN32
 // Windows likes to define macros for min() and max(). We just can't deal with this.
@@ -1928,53 +1929,37 @@ public:
     return true;
   }
 
-private:
-  template <bool strictEquals> 
-  inline bool lessImpl(const ArrayPtr& other) const {
-    // Implementation for < and <=
-    // strictEquals determines if it is <= over <.
+  inline auto operator<=>(decltype(nullptr)) const {
+    using CompReturnType = decltype(ptr[0] <=> ptr[0]);
+    return CompReturnType(size_ <=> 0);
+  }
 
+  inline auto operator<=>(const ArrayPtr& other) const {
+    using CompReturnType = decltype(ptr[0] <=> ptr[0]);
     size_t comparisonSize = kj::min(size_, other.size_);
     if constexpr (isIntegral<RemoveConst<T>>()) {
       int ret = memcmp(ptr, other.ptr, comparisonSize * sizeof(T));
       if(ret != 0){
-        return ret < 0;
+        CompReturnType toRet = ret < 0 ? std::strong_ordering::less :
+                                        std::strong_ordering::greater;
+        return toRet;
       }
     }
     else {
       for(size_t i = 0; i < comparisonSize; i++) {
         bool ret = ptr[i] == other.ptr[i];
         if(!ret) {
-          return ptr[i] < other.ptr[i];
+          return ptr[i] <=> other.ptr[i];
         }
       }
     }
-    if constexpr(strictEquals) {
-      return size_ <= other.size_;
-    } else {
-      return size_ <  other.size_;
-    }
-  }
-public:
-
-  inline bool operator<=(const ArrayPtr& other) const {
-    return this->lessImpl<true>(other);
+    return CompReturnType (size_ <=> other.size_);
   }
 
-  inline bool operator<(const ArrayPtr& other) const {
-    return this->lessImpl<false>(other);
-  }
-
-  inline bool operator<=(decltype(nullptr)) const { return size_ == 0; }
-  inline bool operator>=(decltype(nullptr)) const { return true; }
-  inline bool operator< (decltype(nullptr)) const { return false; }
-  inline bool operator> (decltype(nullptr)) const { return size_ > 0; }
-  friend inline bool operator<=(decltype(nullptr), const ArrayPtr& other) { return other >= nullptr; }
-  friend inline bool operator>=(decltype(nullptr), const ArrayPtr& other) { return other <= nullptr; }
-  friend inline bool operator< (decltype(nullptr), const ArrayPtr& other) { return other >  nullptr; }
-  friend inline bool operator> (decltype(nullptr), const ArrayPtr& other) { return other <  nullptr; }
-  inline bool operator>=(const ArrayPtr& other) const { return other <= *this; }
-  inline bool operator> (const ArrayPtr& other) const { return other < *this; }
+  inline bool operator<=(const ArrayPtr& other) const = default;
+  inline bool operator>=(const ArrayPtr& other) const = default;
+  inline bool operator< (const ArrayPtr& other) const = default;
+  inline bool operator> (const ArrayPtr& other) const = default;
 
   template <typename... Attachments>
   Array<T> attach(Attachments&&... attachments) const KJ_WARN_UNUSED_RESULT;
