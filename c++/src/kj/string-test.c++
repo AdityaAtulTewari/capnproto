@@ -327,6 +327,16 @@ KJ_TEST("stringify array-of-array") {
   KJ_EXPECT(str(array) == "1, 23, 456, 7890");
 }
 
+
+KJ_TEST("operator< and operator==") {
+  const char* hella = "hella";
+  const char* hello = "hello";
+  auto first = kj::StringPtr(hella);
+  auto second = kj::StringPtr(hello);
+  KJ_EXPECT(first != second);
+  KJ_EXPECT(first < second);
+}
+
 KJ_TEST("ArrayPtr == StringPtr") {
   StringPtr s = "foo"_kj;
   ArrayPtr<const char> a = s;

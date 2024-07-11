@@ -728,7 +728,7 @@ inline bool StringPtr::operator==(const StringPtr& other) const {
 inline bool StringPtr::operator<(const StringPtr& other) const {
   bool shorter = content.size() < other.content.size();
   int cmp = memcmp(content.begin(), other.content.begin(),
-                   shorter ? content.size() : other.content.size());
+                   shorter ? content.size() - 1 : other.content.size() - 1);
   return cmp < 0 || (cmp == 0 && shorter);
 }
 
